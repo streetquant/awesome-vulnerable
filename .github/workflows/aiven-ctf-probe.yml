@@ -1,0 +1,43 @@
+name: Aiven CTF bounded probe
+
+on:
+  push:
+    branches:
+      - aiven-ctf-probe-20260826
+    paths:
+      - .ctf/aiven/probe.py
+      - .github/workflows/aiven-ctf-probe.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out isolated probe branch
+        uses: actions/checkout@v4
+
+      - name: Install DNS utility
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dnsutils
+
+      - name: Validate probe source
+        run: |
+          python3 -m py_compile .ctf/aiven/probe.py
+          sha256sum .ctf/aiven/probe.py
+
+      - name: Run bounded target probe
+        run: python3 .ctf/aiven/probe.py
+
+      - name: Upload raw probe evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aiven-ctf-bounded-probe-${{ github.run_id }}
+          path: probe-output/
+          if-no-files-found: error
+          retention-days: 1
