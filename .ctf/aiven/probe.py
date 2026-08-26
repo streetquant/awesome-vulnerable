@@ -10,31 +10,69 @@ import socket
 import ssl
 import struct
 import subprocess
+import tempfile
 import time
 from pathlib import Path
 from typing import Any
 
-HOST = "falcon-bug-bounty-flag-pgsql-dev-sandbox.e.aivencloud.com"
-PORTS = [22, 80, 443, 5432, 12691, 12692, 25060]
-PG_USERS = ["avnadmin", "postgres", "ctf_probe_nonexistent"]
-PG_DATABASES = ["defaultdb", "postgres"]
+NEW_HOST = "falcon-bug-bounty-flag-pgsql-dev-sandbox.e.aivencloud.com"
+OLD_HOST = "falcon-bug-bounty-flag-pgsql-dev-sandbox.aivencloud.com"
+OLD_PUBLIC_HOST = "public-falcon-bug-bounty-flag-pgsql-dev-sandbox.aivencloud.com"
+NEW_PUBLIC_HOST = "public-falcon-bug-bounty-flag-pgsql-dev-sandbox.e.aivencloud.com"
+OLD_SERVICE_HOST = "public-n-falcon-bug-bounty-flag-pgsql-43.aivencloud.com"
+NEW_SERVICE_HOST = "public-n-falcon-bug-bounty-flag-pgsql-43.e.aivencloud.com"
+LAST_KNOWN_IP = "193.122.144.9"
+KNOWN_PG_PORTS = [12691, 12692]
+DNS_NAMES = [
+    NEW_HOST,
+    NEW_PUBLIC_HOST,
+    NEW_SERVICE_HOST,
+    OLD_HOST,
+    OLD_PUBLIC_HOST,
+    OLD_SERVICE_HOST,
+    "e.aivencloud.com",
+    "aivencloud.com",
+]
+DNS_RESOLVERS = [
+    ("system", None),
+    ("cloudflare", "1.1.1.1"),
+    ("google", "8.8.8.8"),
+    ("quad9", "9.9.9.9"),
+]
+SNI_VARIANTS = [NEW_HOST, NEW_PUBLIC_HOST, NEW_SERVICE_HOST, OLD_HOST, OLD_PUBLIC_HOST, OLD_SERVICE_HOST, None]
+PG_IDENTITIES = [
+    ("avnadmin", "defaultdb"),
+    ("postgres", "postgres"),
+    ("ctf_probe_nonexistent", "postgres"),
+]
 OUT = Path("probe-output")
 OUT.mkdir(parents=True, exist_ok=True)
-
+TIMEOUT = 7.0
 RUN_STARTED = dt.datetime.now(dt.timezone.utc).isoformat()
-TIMEOUT = 8.0
+
+
+def utcnow() -> str:
+    return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def safe_run(argv: list[str], timeout: int = 30) -> dict[str, Any]:
+def which(name: str) -> str | None:
+    for directory in os.environ.get("PATH", "").split(os.pathsep):
+        candidate = Path(directory) / name
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return str(candidate)
+    return None
+
+
+def safe_run(argv: list[str], timeout: int = 30, input_bytes: bytes | None = None) -> dict[str, Any]:
     started = time.monotonic()
     try:
         cp = subprocess.run(
             argv,
-            text=True,
+            input=input_bytes,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=timeout,
@@ -43,8 +81,10 @@ def safe_run(argv: list[str], timeout: int = 30) -> dict[str, Any]:
         return {
             "argv": argv,
             "returncode": cp.returncode,
-            "stdout": cp.stdout,
-            "stderr": cp.stderr,
+            "stdout": cp.stdout.decode("utf-8", "replace"),
+            "stderr": cp.stderr.decode("utf-8", "replace"),
+            "stdout_sha256": sha256_bytes(cp.stdout),
+            "stderr_sha256": sha256_bytes(cp.stderr),
             "elapsed_ms": round((time.monotonic() - started) * 1000, 3),
         }
     except Exception as exc:
@@ -55,73 +95,41 @@ def safe_run(argv: list[str], timeout: int = 30) -> dict[str, Any]:
         }
 
 
-def resolve_host() -> dict[str, Any]:
-    result: dict[str, Any] = {"host": HOST, "observed_at": dt.datetime.now(dt.timezone.utc).isoformat()}
-    try:
-        infos = socket.getaddrinfo(HOST, None, type=socket.SOCK_STREAM)
-        rows = []
-        for family, socktype, proto, canonname, sockaddr in infos:
-            rows.append(
-                {
-                    "family": socket.AddressFamily(family).name,
-                    "socktype": socket.SocketKind(socktype).name,
-                    "proto": proto,
-                    "canonname": canonname,
-                    "sockaddr": list(sockaddr),
-                }
-            )
-        unique = []
-        seen = set()
-        for row in rows:
-            key = json.dumps(row, sort_keys=True)
-            if key not in seen:
-                seen.add(key)
-                unique.append(row)
-        result["getaddrinfo"] = unique
-        result["ipv4"] = sorted({r["sockaddr"][0] for r in unique if r["family"] == "AF_INET"})
-        result["ipv6"] = sorted({r["sockaddr"][0] for r in unique if r["family"] == "AF_INET6"})
-    except Exception as exc:
-        result["getaddrinfo_error"] = f"{type(exc).__name__}: {exc}"
+def dns_probe() -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "observed_at": utcnow(),
+        "queries": [],
+        "getaddrinfo": {},
+        "trace": None,
+    }
+    for name in DNS_NAMES:
+        try:
+            infos = socket.getaddrinfo(name, None, type=socket.SOCK_STREAM)
+            result["getaddrinfo"][name] = sorted({row[4][0] for row in infos})
+        except Exception as exc:
+            result["getaddrinfo"][name] = {"error": f"{type(exc).__name__}: {exc}"}
 
-    for qtype in ("A", "AAAA", "CNAME", "TXT", "SRV"):
-        if shutil_which("dig"):
-            result[f"dig_{qtype}"] = safe_run(["dig", "+time=3", "+tries=1", "+short", qtype, HOST], timeout=10)
+    if not which("dig"):
+        result["dig_unavailable"] = True
+        return result
+
+    for resolver_name, resolver_ip in DNS_RESOLVERS:
+        for name in DNS_NAMES:
+            for qtype in ("A", "AAAA", "CNAME", "SOA", "NS"):
+                argv = ["dig", "+time=3", "+tries=1", "+noall", "+comments", "+answer", "+authority"]
+                if resolver_ip:
+                    argv.append(f"@{resolver_ip}")
+                argv.extend([qtype, name])
+                row = safe_run(argv, timeout=10)
+                row.update({"resolver_name": resolver_name, "resolver_ip": resolver_ip, "name": name, "qtype": qtype})
+                result["queries"].append(row)
+
+    result["trace"] = safe_run(["dig", "+time=3", "+tries=1", "+trace", "A", NEW_HOST], timeout=30)
     return result
 
 
-def shutil_which(name: str) -> str | None:
-    for directory in os.environ.get("PATH", "").split(os.pathsep):
-        candidate = Path(directory) / name
-        if candidate.is_file() and os.access(candidate, os.X_OK):
-            return str(candidate)
-    return None
-
-
-def tcp_probe(ip: str, port: int) -> dict[str, Any]:
-    observed_at = dt.datetime.now(dt.timezone.utc).isoformat()
-    started = time.monotonic()
-    row: dict[str, Any] = {"ip": ip, "port": port, "observed_at": observed_at}
-    try:
-        with socket.create_connection((ip, port), timeout=TIMEOUT) as sock:
-            row["connected"] = True
-            row["peername"] = list(sock.getpeername())
-            sock.settimeout(1.0)
-            try:
-                banner = sock.recv(512)
-                row["initial_banner_b64"] = base64.b64encode(banner).decode()
-                row["initial_banner_sha256"] = sha256_bytes(banner)
-            except socket.timeout:
-                row["initial_banner_b64"] = ""
-                row["initial_banner_sha256"] = sha256_bytes(b"")
-    except Exception as exc:
-        row["connected"] = False
-        row["error"] = f"{type(exc).__name__}: {exc}"
-    row["elapsed_ms"] = round((time.monotonic() - started) * 1000, 3)
-    return row
-
-
 def recv_exact(sock: socket.socket, count: int) -> bytes:
-    chunks = []
+    chunks: list[bytes] = []
     remaining = count
     while remaining:
         chunk = sock.recv(remaining)
@@ -132,109 +140,117 @@ def recv_exact(sock: socket.socket, count: int) -> bytes:
     return b"".join(chunks)
 
 
-def recv_pg_messages(sock: socket.socket, max_messages: int = 64, max_total: int = 1024 * 1024) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    total = 0
-    for _ in range(max_messages):
-        try:
-            msg_type = recv_exact(sock, 1)
-            length_raw = recv_exact(sock, 4)
-            length = struct.unpack("!I", length_raw)[0]
-            if length < 4 or length > max_total:
-                rows.append({"type": msg_type.decode("ascii", "replace"), "invalid_length": length})
-                break
-            payload = recv_exact(sock, length - 4)
-        except socket.timeout:
-            rows.append({"timeout": True})
+def parse_pg_error(payload: bytes) -> dict[str, str]:
+    fields: dict[str, str] = {}
+    i = 0
+    while i < len(payload) and payload[i] != 0:
+        code = chr(payload[i])
+        i += 1
+        end = payload.find(b"\x00", i)
+        if end < 0:
             break
-        except Exception as exc:
-            rows.append({"receive_error": f"{type(exc).__name__}: {exc}"})
-            break
-
-        total += 1 + 4 + len(payload)
-        row: dict[str, Any] = {
-            "type": msg_type.decode("ascii", "replace"),
-            "length": length,
-            "payload_b64": base64.b64encode(payload).decode(),
-            "payload_sha256": sha256_bytes(payload),
-        }
-        if msg_type == b"R" and len(payload) >= 4:
-            auth_code = struct.unpack("!I", payload[:4])[0]
-            auth_names = {
-                0: "AuthenticationOk",
-                2: "AuthenticationKerberosV5",
-                3: "AuthenticationCleartextPassword",
-                5: "AuthenticationMD5Password",
-                6: "AuthenticationSCMCredential",
-                7: "AuthenticationGSS",
-                8: "AuthenticationGSSContinue",
-                9: "AuthenticationSSPI",
-                10: "AuthenticationSASL",
-                11: "AuthenticationSASLContinue",
-                12: "AuthenticationSASLFinal",
-            }
-            row["auth_code"] = auth_code
-            row["auth_name"] = auth_names.get(auth_code, "Unknown")
-            if auth_code == 5 and len(payload) >= 8:
-                row["md5_salt_hex"] = payload[4:8].hex()
-        elif msg_type == b"E":
-            fields: dict[str, str] = {}
-            i = 0
-            while i < len(payload) and payload[i] != 0:
-                code = chr(payload[i])
-                i += 1
-                end = payload.find(b"\x00", i)
-                if end < 0:
-                    break
-                fields[code] = payload[i:end].decode("utf-8", "replace")
-                i = end + 1
-            row["error_fields"] = fields
-        elif msg_type == b"S":
-            parts = payload.split(b"\x00")
-            if len(parts) >= 2:
-                row["parameter"] = parts[0].decode("utf-8", "replace")
-                row["value"] = parts[1].decode("utf-8", "replace")
-        elif msg_type == b"K" and len(payload) == 8:
-            row["backend_pid"] = struct.unpack("!I", payload[:4])[0]
-            row["backend_key_redacted"] = True
-        rows.append(row)
-        if total >= max_total:
-            rows.append({"truncated": True, "total_bytes": total})
-            break
-        # Hard stop: never answer any authentication challenge.
-        if msg_type == b"R":
-            break
-        if msg_type in (b"E", b"Z"):
-            break
-    return rows
+        fields[code] = payload[i:end].decode("utf-8", "replace")
+        i = end + 1
+    return fields
 
 
-def tls_certificate_from_socket(raw: socket.socket, server_hostname: str) -> tuple[ssl.SSLSocket, dict[str, Any]]:
-    context = ssl.create_default_context()
-    context.check_hostname = True
-    context.verify_mode = ssl.CERT_REQUIRED
-    tls = context.wrap_socket(raw, server_hostname=server_hostname)
-    der = tls.getpeercert(binary_form=True) or b""
-    info = {
-        "version": tls.version(),
-        "cipher": list(tls.cipher() or ()),
-        "selected_alpn_protocol": tls.selected_alpn_protocol(),
-        "peer_cert_der_b64": base64.b64encode(der).decode(),
-        "peer_cert_sha256": sha256_bytes(der),
-        "peer_cert": tls.getpeercert(),
-    }
-    return tls, info
-
-
-def pg_startup_probe(ip: str, port: int, user: str, database: str) -> dict[str, Any]:
-    observed_at = dt.datetime.now(dt.timezone.utc).isoformat()
+def read_first_pg_message(sock: socket.socket) -> dict[str, Any]:
+    msg_type = recv_exact(sock, 1)
+    length_raw = recv_exact(sock, 4)
+    length = struct.unpack("!I", length_raw)[0]
+    if length < 4 or length > 1024 * 1024:
+        return {"type": msg_type.decode("ascii", "replace"), "invalid_length": length}
+    payload = recv_exact(sock, length - 4)
     row: dict[str, Any] = {
-        "host": HOST,
+        "type": msg_type.decode("ascii", "replace"),
+        "length": length,
+        "payload_b64": base64.b64encode(payload).decode(),
+        "payload_sha256": sha256_bytes(payload),
+    }
+    if msg_type == b"R" and len(payload) >= 4:
+        auth_code = struct.unpack("!I", payload[:4])[0]
+        auth_names = {
+            0: "AuthenticationOk",
+            2: "AuthenticationKerberosV5",
+            3: "AuthenticationCleartextPassword",
+            5: "AuthenticationMD5Password",
+            6: "AuthenticationSCMCredential",
+            7: "AuthenticationGSS",
+            8: "AuthenticationGSSContinue",
+            9: "AuthenticationSSPI",
+            10: "AuthenticationSASL",
+            11: "AuthenticationSASLContinue",
+            12: "AuthenticationSASLFinal",
+        }
+        row["auth_code"] = auth_code
+        row["auth_name"] = auth_names.get(auth_code, "Unknown")
+        if auth_code == 5 and len(payload) >= 8:
+            row["md5_salt_hex"] = payload[4:8].hex()
+        if auth_code == 10 and len(payload) > 4:
+            row["sasl_mechanisms"] = [
+                part.decode("ascii", "replace")
+                for part in payload[4:].split(b"\x00")
+                if part
+            ]
+    elif msg_type == b"E":
+        row["error_fields"] = parse_pg_error(payload)
+    return row
+
+
+def decode_certificate(der: bytes) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "der_b64": base64.b64encode(der).decode(),
+        "der_sha256": sha256_bytes(der),
+    }
+    if not der:
+        return result
+    pem = ssl.DER_cert_to_PEM_cert(der).encode()
+    result["pem_sha256"] = sha256_bytes(pem)
+    if which("openssl"):
+        with tempfile.NamedTemporaryFile(prefix="aiven-cert-", suffix=".pem", delete=True) as handle:
+            handle.write(pem)
+            handle.flush()
+            result["openssl"] = safe_run(
+                [
+                    "openssl", "x509", "-in", handle.name, "-noout",
+                    "-subject", "-issuer", "-serial", "-dates",
+                    "-fingerprint", "-sha256", "-ext", "subjectAltName",
+                ],
+                timeout=10,
+            )
+    return result
+
+
+def tcp_connect(ip: str, port: int) -> dict[str, Any]:
+    started = time.monotonic()
+    row: dict[str, Any] = {"ip": ip, "port": port, "observed_at": utcnow()}
+    try:
+        with socket.create_connection((ip, port), timeout=TIMEOUT) as sock:
+            row["connected"] = True
+            row["peername"] = list(sock.getpeername())
+            sock.settimeout(1.0)
+            try:
+                banner = sock.recv(256)
+            except socket.timeout:
+                banner = b""
+            row["initial_banner_b64"] = base64.b64encode(banner).decode()
+            row["initial_banner_sha256"] = sha256_bytes(banner)
+    except Exception as exc:
+        row["connected"] = False
+        row["error"] = f"{type(exc).__name__}: {exc}"
+    row["elapsed_ms"] = round((time.monotonic() - started) * 1000, 3)
+    return row
+
+
+def pg_tls_probe(ip: str, port: int, sni: str | None, alpn: bool, user: str, database: str) -> dict[str, Any]:
+    row: dict[str, Any] = {
+        "observed_at": utcnow(),
         "ip": ip,
         "port": port,
+        "sni": sni,
+        "requested_alpn": "postgresql" if alpn else None,
         "user": user,
         "database": database,
-        "observed_at": observed_at,
         "sent_password_message": False,
         "sent_sasl_message": False,
         "sent_sql": False,
@@ -250,17 +266,26 @@ def pg_startup_probe(ip: str, port: int, user: str, database: str) -> dict[str, 
         row["ssl_request_hex"] = ssl_request.hex()
         row["ssl_response_hex"] = ssl_response.hex()
         if ssl_response != b"S":
-            row["classification"] = "not_postgresql_tls_or_ssl_refused"
+            row["classification"] = "postgres_ssl_refused_or_not_postgresql"
             return row
 
-        tls, cert_info = tls_certificate_from_socket(raw, HOST)
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        if alpn:
+            context.set_alpn_protocols(["postgresql"])
+        tls = context.wrap_socket(raw, server_hostname=sni)
         raw = None
-        row["tls"] = cert_info
+        tls.settimeout(TIMEOUT)
+        row["tls_version"] = tls.version()
+        row["tls_cipher"] = list(tls.cipher() or ())
+        row["selected_alpn"] = tls.selected_alpn_protocol()
+        row["certificate"] = decode_certificate(tls.getpeercert(binary_form=True) or b"")
 
         params = (
             b"user\x00" + user.encode() + b"\x00"
             + b"database\x00" + database.encode() + b"\x00"
-            + b"application_name\x00aiven-ctf-bounded-probe\x00"
+            + b"application_name\x00aiven-ctf-direct-ip-probe\x00"
             + b"client_encoding\x00UTF8\x00"
             + b"\x00"
         )
@@ -268,19 +293,16 @@ def pg_startup_probe(ip: str, port: int, user: str, database: str) -> dict[str, 
         tls.sendall(startup)
         row["startup_packet_b64"] = base64.b64encode(startup).decode()
         row["startup_packet_sha256"] = sha256_bytes(startup)
-        row["messages"] = recv_pg_messages(tls)
-        auth_names = [m.get("auth_name") for m in row["messages"] if isinstance(m, dict) and m.get("auth_name")]
-        if "AuthenticationOk" in auth_names:
+        row["first_message"] = read_first_pg_message(tls)
+        auth_name = row["first_message"].get("auth_name")
+        if auth_name == "AuthenticationOk":
             row["classification"] = "authentication_ok_observed_no_sql_sent"
-        elif auth_names:
+        elif auth_name:
             row["classification"] = "authentication_challenge_observed_no_response_sent"
-        elif any(m.get("error_fields") for m in row["messages"] if isinstance(m, dict)):
+        elif row["first_message"].get("error_fields"):
             row["classification"] = "server_error_before_auth"
         else:
-            row["classification"] = "postgresql_response_unclassified"
-    except ssl.SSLCertVerificationError as exc:
-        row["classification"] = "tls_certificate_verification_failed"
-        row["error"] = f"{type(exc).__name__}: {exc}"
+            row["classification"] = "postgres_response_unclassified"
     except Exception as exc:
         row["classification"] = "probe_error"
         row["error"] = f"{type(exc).__name__}: {exc}"
@@ -298,27 +320,10 @@ def pg_startup_probe(ip: str, port: int, user: str, database: str) -> dict[str, 
     return row
 
 
-def https_probe() -> dict[str, Any]:
-    if not shutil_which("curl"):
-        return {"skipped": "curl_not_available"}
-    return safe_run(
-        [
-            "curl", "--silent", "--show-error", "--include", "--head",
-            "--max-time", "10", "--connect-timeout", "5",
-            "--resolve", f"{HOST}:443:{RESOLVED_IPS[0]}" if RESOLVED_IPS else "",
-            f"https://{HOST}/",
-        ] if RESOLVED_IPS else [
-            "curl", "--silent", "--show-error", "--include", "--head",
-            "--max-time", "10", "--connect-timeout", "5",
-            f"https://{HOST}/",
-        ],
-        timeout=15,
-    )
-
-
 report: dict[str, Any] = {
-    "schema": "aiven-ctf-bounded-probe-v1",
-    "target": HOST,
+    "schema": "aiven-ctf-direct-ip-dns-probe-v2",
+    "target": NEW_HOST,
+    "last_known_target_ip": LAST_KNOWN_IP,
     "run_started_utc": RUN_STARTED,
     "runner": {
         "github_repository": os.environ.get("GITHUB_REPOSITORY"),
@@ -329,61 +334,62 @@ report: dict[str, Any] = {
         "runner_arch": os.environ.get("RUNNER_ARCH"),
     },
     "safety": {
-        "scope": "single authorized Aiven CTF hostname",
-        "ports": PORTS,
+        "scope": "exact authorized Aiven CTF hostname plus its last independently observed target IP",
         "password_messages_sent": 0,
         "sasl_messages_sent": 0,
         "sql_statements_sent": 0,
         "brute_force": False,
+        "known_ports_only": KNOWN_PG_PORTS,
     },
 }
 
-report["dns"] = resolve_host()
-RESOLVED_IPS = report["dns"].get("ipv4", [])
-report["tcp"] = [tcp_probe(ip, port) for ip in RESOLVED_IPS for port in PORTS]
-report["https"] = https_probe()
+report["dns"] = dns_probe()
+report["direct_ip_tcp"] = [tcp_connect(LAST_KNOWN_IP, port) for port in KNOWN_PG_PORTS]
 
 pg_rows: list[dict[str, Any]] = []
-for ip in RESOLVED_IPS:
-    for port in PORTS:
-        if not any(r.get("ip") == ip and r.get("port") == port and r.get("connected") for r in report["tcp"]):
-            continue
-        for user in PG_USERS:
-            for database in PG_DATABASES:
-                pg_rows.append(pg_startup_probe(ip, port, user, database))
-report["postgresql_startup_probes"] = pg_rows
+for port in KNOWN_PG_PORTS:
+    if not any(row.get("port") == port and row.get("connected") for row in report["direct_ip_tcp"]):
+        continue
+    for sni in SNI_VARIANTS:
+        for alpn in (False, True):
+            for user, database in PG_IDENTITIES:
+                pg_rows.append(pg_tls_probe(LAST_KNOWN_IP, port, sni, alpn, user, database))
+report["direct_ip_postgresql"] = pg_rows
+report["run_finished_utc"] = utcnow()
 
-report["run_finished_utc"] = dt.datetime.now(dt.timezone.utc).isoformat()
-report_path = OUT / "probe.json"
+report_path = OUT / "probe-v2.json"
 report_bytes = (json.dumps(report, indent=2, sort_keys=True) + "\n").encode()
 report_path.write_bytes(report_bytes)
 
-manifest = {
-    "schema": "aiven-ctf-bounded-probe-manifest-v1",
-    "target": HOST,
-    "created_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
-    "files": [
-        {
-            "path": str(report_path),
-            "bytes": len(report_bytes),
-            "sha256": sha256_bytes(report_bytes),
-        }
-    ],
-}
-manifest_path = OUT / "manifest.json"
-manifest_bytes = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
-manifest_path.write_bytes(manifest_bytes)
-
 summary = {
-    "target": HOST,
-    "ipv4_count": len(RESOLVED_IPS),
-    "open_tcp_ports": sorted({
-        r["port"] for r in report["tcp"] if r.get("connected")
-    }),
-    "pg_classifications": sorted({
-        r.get("classification", "unknown") for r in pg_rows
+    "schema": report["schema"],
+    "target": NEW_HOST,
+    "run_started_utc": RUN_STARTED,
+    "run_finished_utc": report["run_finished_utc"],
+    "system_new_host_addresses": report["dns"]["getaddrinfo"].get(NEW_HOST),
+    "open_known_ports": sorted({row["port"] for row in report["direct_ip_tcp"] if row.get("connected")}),
+    "pg_classifications": sorted({row.get("classification", "unknown") for row in pg_rows}),
+    "certificate_sha256s": sorted({
+        row.get("certificate", {}).get("der_sha256")
+        for row in pg_rows
+        if row.get("certificate", {}).get("der_sha256")
     }),
     "probe_sha256": sha256_bytes(report_bytes),
-    "manifest_sha256": sha256_bytes(manifest_bytes),
 }
+summary_path = OUT / "summary-v2.json"
+summary_bytes = (json.dumps(summary, indent=2, sort_keys=True) + "\n").encode()
+summary_path.write_bytes(summary_bytes)
+
+manifest = {
+    "schema": "aiven-ctf-direct-ip-dns-probe-manifest-v2",
+    "target": NEW_HOST,
+    "created_at_utc": utcnow(),
+    "files": [
+        {"path": str(report_path), "bytes": len(report_bytes), "sha256": sha256_bytes(report_bytes)},
+        {"path": str(summary_path), "bytes": len(summary_bytes), "sha256": sha256_bytes(summary_bytes)},
+    ],
+}
+manifest_path = OUT / "manifest-v2.json"
+manifest_bytes = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
+manifest_path.write_bytes(manifest_bytes)
 print(json.dumps(summary, sort_keys=True))
