@@ -15,7 +15,7 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Check out isolated probe branch
         uses: actions/checkout@v4
@@ -29,6 +29,98 @@ jobs:
         run: |
           python3 -m py_compile .ctf/aiven/probe.py
           sha256sum .ctf/aiven/probe.py
+
+      - name: Capture public Bugcrowd engagement brief and network URLs
+        continue-on-error: true
+        run: |
+          set -u
+          OUT=probe-output/bugcrowd
+          URL='https://bugcrowd.com/engagements/aiven-mbb-og'
+          mkdir -p "$OUT"
+
+          curl --silent --show-error --location \
+            --user-agent 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/150 Safari/537.36' \
+            --dump-header "$OUT/page-headers.txt" \
+            --output "$OUT/page-raw.html" \
+            --max-time 30 "$URL" || true
+
+          for endpoint in \
+            "$URL.json" \
+            "$URL/changelog.json" \
+            "$URL/target_groups.json" \
+            "$URL/rewards.json"; do
+            slug=$(printf '%s' "$endpoint" | sha256sum | cut -c1-16)
+            curl --silent --show-error --location \
+              --user-agent 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/150 Safari/537.36' \
+              --dump-header "$OUT/endpoint-$slug.headers.txt" \
+              --output "$OUT/endpoint-$slug.body" \
+              --max-time 30 "$endpoint" || true
+            printf '%s\t%s\n' "$slug" "$endpoint" >> "$OUT/endpoints.tsv"
+          done
+
+          CHROME=$(command -v google-chrome-stable || command -v google-chrome || command -v chromium-browser || command -v chromium || true)
+          printf '%s\n' "$CHROME" > "$OUT/chrome-binary.txt"
+          if [ -n "$CHROME" ]; then
+            "$CHROME" \
+              --headless=new \
+              --no-sandbox \
+              --disable-gpu \
+              --disable-dev-shm-usage \
+              --disable-extensions \
+              --no-first-run \
+              --user-data-dir="$(mktemp -d)" \
+              --virtual-time-budget=30000 \
+              --log-net-log="$OUT/netlog.json" \
+              --net-log-capture-mode=Default \
+              --dump-dom "$URL" \
+              > "$OUT/dom.html" \
+              2> "$OUT/chrome-stderr.txt" || true
+          fi
+
+          python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          out = Path('probe-output/bugcrowd')
+          urls = set()
+          for path in out.iterdir():
+              if not path.is_file() or path.stat().st_size > 100_000_000:
+                  continue
+              try:
+                  text = path.read_text(errors='replace')
+              except Exception:
+                  continue
+              for match in re.findall(r'https?://[^\s"<>\\]+', text):
+                  urls.add(match.rstrip('),.;'))
+          (out / 'observed-urls.txt').write_text('\n'.join(sorted(urls)) + '\n')
+
+          hits = []
+          needles = ('falcon-bug-bounty', 'ssh_host_ed25519_key', 'target_group', 'changelog', 'aiven-mbb-og')
+          for path in out.iterdir():
+              if not path.is_file() or path.stat().st_size > 20_000_000:
+                  continue
+              try:
+                  text = path.read_text(errors='replace')
+              except Exception:
+                  continue
+              for needle in needles:
+                  for m in re.finditer(re.escape(needle), text, re.I):
+                      start = max(0, m.start() - 240)
+                      end = min(len(text), m.end() + 480)
+                      hits.append({'file': path.name, 'needle': needle, 'context': text[start:end]})
+                      if len(hits) >= 300:
+                          break
+                  if len(hits) >= 300:
+                      break
+              if len(hits) >= 300:
+                  break
+          (out / 'keyword-hits.json').write_text(json.dumps(hits, indent=2, sort_keys=True) + '\n')
+          PY
+
+          find "$OUT" -maxdepth 1 -type f -printf '%f\t%s bytes\n' | sort > "$OUT/files.txt"
+          sha256sum "$OUT"/* > "$OUT/sha256sums.txt" || true
+          cat "$OUT/files.txt"
 
       - name: Run bounded target probe
         run: python3 .ctf/aiven/probe.py
