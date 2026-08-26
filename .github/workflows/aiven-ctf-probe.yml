@@ -6,6 +6,7 @@ on:
       - aiven-ctf-probe-20260826
     paths:
       - .ctf/aiven/probe.py
+      - .ctf/aiven/discover.py
       - .github/workflows/aiven-ctf-probe.yml
   workflow_dispatch:
 
@@ -15,7 +16,7 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Check out isolated probe branch
         uses: actions/checkout@v4
@@ -25,148 +26,15 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq dnsutils
 
-      - name: Validate probe source and workflow
+      - name: Validate probe sources and workflow
         run: |
-          python3 -m py_compile .ctf/aiven/probe.py
-          sha256sum .ctf/aiven/probe.py .github/workflows/aiven-ctf-probe.yml
+          python3 -m py_compile .ctf/aiven/probe.py .ctf/aiven/discover.py
+          sha256sum .ctf/aiven/probe.py .ctf/aiven/discover.py .github/workflows/aiven-ctf-probe.yml
 
-      - name: Capture public Bugcrowd engagement brief, changelogs, and network URLs
-        continue-on-error: true
-        run: |
-          set -u
-          OUT=probe-output/bugcrowd
-          URL='https://bugcrowd.com/engagements/aiven-mbb-og'
-          UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/150 Safari/537.36'
-          mkdir -p "$OUT/changelog"
+      - name: Discover current challenge-derived service names
+        run: python3 .ctf/aiven/discover.py
 
-          curl --silent --show-error --location \
-            --user-agent "$UA" \
-            --cookie-jar "$OUT/cookies.txt" \
-            --dump-header "$OUT/page-headers.txt" \
-            --output "$OUT/page-raw.html" \
-            --max-time 30 "$URL" || true
-
-          for endpoint in \
-            "$URL.json" \
-            "$URL/changelog.json" \
-            "$URL/target_groups.json" \
-            "$URL/rewards.json"; do
-            slug=$(printf '%s' "$endpoint" | sha256sum | cut -c1-16)
-            curl --silent --show-error --location \
-              --user-agent "$UA" \
-              --cookie "$OUT/cookies.txt" \
-              --header 'Accept: application/json' \
-              --header 'X-Requested-With: XMLHttpRequest' \
-              --dump-header "$OUT/endpoint-$slug.headers.txt" \
-              --output "$OUT/endpoint-$slug.body" \
-              --max-time 30 "$endpoint" || true
-            printf '%s\t%s\n' "$slug" "$endpoint" >> "$OUT/endpoints.tsv"
-          done
-
-          for page in 1 2 3 4; do
-            endpoint="$URL/changelog.json?page=$page"
-            curl --silent --show-error --location \
-              --user-agent "$UA" \
-              --cookie "$OUT/cookies.txt" \
-              --header 'Accept: application/json' \
-              --header 'X-Requested-With: XMLHttpRequest' \
-              --dump-header "$OUT/changelog/page-$page.headers.txt" \
-              --output "$OUT/changelog/page-$page.json" \
-              --max-time 30 "$endpoint" || true
-          done
-
-          for id in \
-            61a4d9b1-6337-47d1-b19a-513a92c52084 \
-            e92c7990-89d1-4312-bc70-efbdc8a39052 \
-            2def209b-29bd-47b6-a9dc-ca7fada9f9ed; do
-            for suffix in '' '.json'; do
-              endpoint="$URL/changelog/$id$suffix"
-              label="$id"
-              if [ -n "$suffix" ]; then label="$id-json"; fi
-              curl --silent --show-error --location \
-                --user-agent "$UA" \
-                --cookie "$OUT/cookies.txt" \
-                --header 'Accept: application/json' \
-                --header 'X-Requested-With: XMLHttpRequest' \
-                --dump-header "$OUT/changelog/$label.headers.txt" \
-                --output "$OUT/changelog/$label.body" \
-                --max-time 30 "$endpoint" || true
-              printf '%s\t%s\n' "$label" "$endpoint" >> "$OUT/changelog/endpoints.tsv"
-            done
-          done
-
-          CHROME=$(command -v google-chrome-stable || command -v google-chrome || command -v chromium-browser || command -v chromium || true)
-          printf '%s\n' "$CHROME" > "$OUT/chrome-binary.txt"
-          if [ -n "$CHROME" ]; then
-            "$CHROME" \
-              --headless=new \
-              --no-sandbox \
-              --disable-gpu \
-              --disable-dev-shm-usage \
-              --disable-extensions \
-              --no-first-run \
-              --user-data-dir="$(mktemp -d)" \
-              --virtual-time-budget=30000 \
-              --log-net-log="$OUT/netlog.json" \
-              --net-log-capture-mode=Default \
-              --dump-dom "$URL" \
-              > "$OUT/dom.html" \
-              2> "$OUT/chrome-stderr.txt" || true
-          fi
-
-          python3 - <<'PY'
-          import json
-          import re
-          from pathlib import Path
-
-          out = Path('probe-output/bugcrowd')
-          urls = set()
-          for path in out.rglob('*'):
-              if not path.is_file() or path.stat().st_size > 100_000_000:
-                  continue
-              try:
-                  text = path.read_text(errors='replace')
-              except Exception:
-                  continue
-              for match in re.findall(r'https?://[^\s"<>\\]+', text):
-                  urls.add(match.rstrip('),.;'))
-          (out / 'observed-urls.txt').write_text('\n'.join(sorted(urls)) + '\n')
-
-          hits = []
-          needles = (
-              'falcon-bug-bounty',
-              'ssh_host_ed25519_key',
-              'target_group',
-              'changelog',
-              'aiven-mbb-og',
-              'e.aivencloud.com',
-          )
-          for path in out.rglob('*'):
-              if not path.is_file() or path.stat().st_size > 20_000_000:
-                  continue
-              try:
-                  text = path.read_text(errors='replace')
-              except Exception:
-                  continue
-              for needle in needles:
-                  for match in re.finditer(re.escape(needle), text, re.I):
-                      start = max(0, match.start() - 320)
-                      end = min(len(text), match.end() + 720)
-                      hits.append({'file': str(path.relative_to(out)), 'needle': needle, 'context': text[start:end]})
-                      if len(hits) >= 500:
-                          break
-                  if len(hits) >= 500:
-                      break
-              if len(hits) >= 500:
-                  break
-          (out / 'keyword-hits.json').write_text(json.dumps(hits, indent=2, sort_keys=True) + '\n')
-          PY
-
-          find "$OUT" -type f -printf '%P\t%s bytes\n' | sort > "$OUT/files.txt"
-          sha256sum $(find "$OUT" -type f -print | sort) > "$OUT/sha256sums.txt" || true
-          cat "$OUT/files.txt"
-
-      - name: Run bounded target probe
+      - name: Recheck exact target and last known endpoint
         run: python3 .ctf/aiven/probe.py
 
       - name: Upload raw probe evidence
