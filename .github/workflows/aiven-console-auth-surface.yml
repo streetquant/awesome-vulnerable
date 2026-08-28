@@ -1,0 +1,38 @@
+name: Aiven Console auth-surface inspection
+
+on:
+  push:
+    branches:
+      - aiven-ctf-probe-20260826
+    paths:
+      - .ctf/aiven/console_auth_surface.py
+      - .github/workflows/aiven-console-auth-surface.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Check out isolated probe branch
+        uses: actions/checkout@v4
+
+      - name: Validate source
+        run: |
+          python3 -m py_compile .ctf/aiven/console_auth_surface.py
+          sha256sum .ctf/aiven/console_auth_surface.py .github/workflows/aiven-console-auth-surface.yml
+
+      - name: Inspect passive authentication surface
+        run: python3 .ctf/aiven/console_auth_surface.py
+
+      - name: Upload inspection evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aiven-console-auth-surface-${{ github.run_id }}
+          path: probe-output/console-auth-surface/
+          if-no-files-found: error
+          retention-days: 1
