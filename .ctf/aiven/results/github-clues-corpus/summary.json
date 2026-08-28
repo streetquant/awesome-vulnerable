@@ -1,0 +1,852 @@
+{
+  "authenticated": true,
+  "file_context_count": 0,
+  "query_counts": {
+    "\"CVE-2026-46242\"": {
+      "code": 50,
+      "commits": 50,
+      "issues": 50
+    },
+    "\"customOpLibrary\"": {
+      "code": 50,
+      "commits": 50,
+      "issues": 18
+    },
+    "\"execute_maybe_sent\"": {
+      "code": 0,
+      "commits": 0,
+      "issues": 0
+    },
+    "\"falcon-bug-bounty-flag-pgsql\"": {
+      "code": 0,
+      "commits": 0,
+      "issues": 0
+    },
+    "\"pre_registration_before\"": {
+      "code": 0,
+      "commits": 50,
+      "issues": 0
+    },
+    "\"root_entered\" \"private_key_recovered\"": {
+      "code": 0,
+      "commits": 0,
+      "issues": 0
+    },
+    "\"service_instance_boundary\"": {
+      "code": 0,
+      "commits": 4,
+      "issues": 0
+    },
+    "\"supervisor_status_reconcile\"": {
+      "code": 0,
+      "commits": 2,
+      "issues": 0
+    }
+  },
+  "report_sha256": "b7536516923dce410ce51aaa0318206cf1e2a5a547a27e485105f2306fd325c9",
+  "run_finished_utc": "2026-08-28T19:43:10.261398+00:00",
+  "run_started_utc": "2026-08-28T19:42:57.179225+00:00",
+  "schema": "aiven-ctf-github-clue-search-summary-v1",
+  "top_findings": [
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/max/python/max/experimental/torch/torch.py",
+      "kind": "code",
+      "name": "torch.py",
+      "path": "max/python/max/experimental/torch/torch.py",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/ucb-bar/onnxruntime-riscv/blob/0c8c9b4f881b5f31d32c6b5a76cac4ee14a8f338/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/fengbingchun/PyTorch_Test/blob/df5c2169f0b699bcd6e74adb4cb0e57f7dcd9348/src/onnxruntime/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "src/onnxruntime/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/mldlwizard/onnxruntime/blob/b891488e4c13aed34312e133624908fba9788fde/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/MetaX-MACA/Onnxruntime/blob/1acd81ff2d0179530d6428361cdba6429a9df62e/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/inteplus/onnxruntime/blob/8079c763835a594b3c76249398f92c3372901f23/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/fushwLZU/onnxruntime_test/blob/7ee82dde9150dc0d3014c06a82eabdecb989f2f3/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/OuadiElfarouki/onnxruntime/blob/83280b9130ba35d46c614ad0dabba36219536b89/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/sedie1234/onnxruntime_npu/blob/a2aeaaa090f8de9d7d1b536660b2e01cd7365b9e/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/deciding/ortold/blob/cf4ec2deb98b7b0eefee1d13e5586a9eb6f5dd00/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/seokNULL/ort-pim-release/blob/7f672bfa310c9e4954786204238fc8e680e2173c/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/lianakoleva/MOJOxTORCH/blob/ef0605d19c7c2df81eb9df7f243283085a032879/mojo_custom_class.py",
+      "kind": "code",
+      "name": "mojo_custom_class.py",
+      "path": "mojo_custom_class.py",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/Ammar-Alnagar/modular-rs/blob/067777089f4350cca2b4303a3ceb0c6fbb90346c/max/python/max/experimental/torch/torch.py",
+      "kind": "code",
+      "name": "torch.py",
+      "path": "max/python/max/experimental/torch/torch.py",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/Ammar-Alnagar/MAXimus/blob/941e273a9b856c49f8d9c93001c504402b05500f/max/python/max/experimental/torch/torch.py",
+      "kind": "code",
+      "name": "torch.py",
+      "path": "max/python/max/experimental/torch/torch.py",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/drobertson-dev/gpt-oss-modular/blob/d187f5ffeaf3f8a58e3c9f826bd3dbddd57795c3/ref-docs/modular/max/python/max/torch/torch.py",
+      "kind": "code",
+      "name": "torch.py",
+      "path": "ref-docs/modular/max/python/max/torch/torch.py",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/ycchen-tw/tasr/blob/c00b50a976fd9d0a55c9775f8fadc4a67189b73d/onnxruntime/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "onnxruntime/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/ucb-bar/onnxruntime-riscv/blob/0c8c9b4f881b5f31d32c6b5a76cac4ee14a8f338/onnxruntime/python/onnxruntime_pybind_state.cc",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state.cc",
+      "path": "onnxruntime/python/onnxruntime_pybind_state.cc",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/OAAX-standard/hailo-acceleration/blob/d60b99cd1e8b98f2eaeab1ddb815564852feaa40/runtime-library/deps/onnxruntime/onnxruntime-4.17.0/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "runtime-library/deps/onnxruntime/onnxruntime-4.17.0/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/OAAX-standard/hailo-acceleration/blob/d60b99cd1e8b98f2eaeab1ddb815564852feaa40/runtime-library/deps/onnxruntime/onnxruntime-4.18.0/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "runtime-library/deps/onnxruntime/onnxruntime-4.18.0/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/OAAX-standard/hailo-acceleration/blob/d60b99cd1e8b98f2eaeab1ddb815564852feaa40/runtime-library/deps/onnxruntime/onnxruntime-4.19.0/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "runtime-library/deps/onnxruntime/onnxruntime-4.19.0/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/OAAX-standard/hailo-acceleration/blob/d60b99cd1e8b98f2eaeab1ddb815564852feaa40/runtime-library/deps/onnxruntime/onnxruntime-4.20.0/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "runtime-library/deps/onnxruntime/onnxruntime-4.20.0/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/ahyangyi/flat-chipyard/blob/af4211169a6c55b3bb9d12f9b3840d614ab31aed/generators/gemmini/software/onnxruntime-riscv/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "generators/gemmini/software/onnxruntime-riscv/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/max/python/docs/experimental.torch.rst",
+      "kind": "code",
+      "name": "experimental.torch.rst",
+      "path": "max/python/docs/experimental.torch.rst",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/max/examples/pytorch_custom_ops/README.md",
+      "kind": "code",
+      "name": "README.md",
+      "path": "max/examples/pytorch_custom_ops/README.md",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/docs/releases/v25.4.md",
+      "kind": "code",
+      "name": "v25.4.md",
+      "path": "docs/releases/v25.4.md",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/docs/max/develop/custom-ops.mdx",
+      "kind": "code",
+      "name": "custom-ops.mdx",
+      "path": "docs/max/develop/custom-ops.mdx",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/max/examples/pytorch_custom_ops/addition.py",
+      "kind": "code",
+      "name": "addition.py",
+      "path": "max/examples/pytorch_custom_ops/addition.py",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/ns2max/hot_licks/blob/6b3afe4e765ad7bbd474f8b1d727958cd9d1afa0/plugin/hot_licks/libs/onnxruntime/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "plugin/hot_licks/libs/onnxruntime/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/max/examples/pytorch_custom_ops/grayscale.py",
+      "kind": "code",
+      "name": "grayscale.py",
+      "path": "max/examples/pytorch_custom_ops/grayscale.py",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/max/python/max/experimental/torch/__init__.py",
+      "kind": "code",
+      "name": "__init__.py",
+      "path": "max/python/max/experimental/torch/__init__.py",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/ns2max/hot_licks/blob/6b3afe4e765ad7bbd474f8b1d727958cd9d1afa0/plugin/hot_licks/libs/onnxruntime copy/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state_common.h",
+      "path": "plugin/hot_licks/libs/onnxruntime copy/onnxruntime/python/onnxruntime_pybind_state_common.h",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/docs/max/develop/custom-kernels-pytorch.mdx",
+      "kind": "code",
+      "name": "custom-kernels-pytorch.mdx",
+      "path": "docs/max/develop/custom-kernels-pytorch.mdx",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/docs/releases/v26.2.md",
+      "kind": "code",
+      "name": "v26.2.md",
+      "path": "docs/releases/v26.2.md",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/docs/releases/v26.3.md",
+      "kind": "code",
+      "name": "v26.3.md",
+      "path": "docs/releases/v26.3.md",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/max/examples/pytorch_custom_ops/whisper.py",
+      "kind": "code",
+      "name": "whisper.py",
+      "path": "max/examples/pytorch_custom_ops/whisper.py",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/rerun-io/examples-monorepo/blob/f84b7fdf3ac22eeb3c059233a117927a7ef60128/packages/mast3r-slam/docs/customoplibrary-migration-plan.md",
+      "kind": "code",
+      "name": "customoplibrary-migration-plan.md",
+      "path": "packages/mast3r-slam/docs/customoplibrary-migration-plan.md",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/max/examples/custom_ops/kernels/fused_attention.mojo",
+      "kind": "code",
+      "name": "fused_attention.mojo",
+      "path": "max/examples/custom_ops/kernels/fused_attention.mojo",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/fengbingchun/PyTorch_Test/blob/df5c2169f0b699bcd6e74adb4cb0e57f7dcd9348/src/onnxruntime/onnxruntime/python/onnxruntime_pybind_state.cc",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state.cc",
+      "path": "src/onnxruntime/onnxruntime/python/onnxruntime_pybind_state.cc",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/blob/1c9fd2e03331f77d3a1034127cb3700b7fa43c02/max/examples/pytorch_custom_ops/operations/fused_attention.mojo",
+      "kind": "code",
+      "name": "fused_attention.mojo",
+      "path": "max/examples/pytorch_custom_ops/operations/fused_attention.mojo",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/fushwLZU/onnxruntime_test/blob/7ee82dde9150dc0d3014c06a82eabdecb989f2f3/onnxruntime/python/onnxruntime_pybind_state.cc",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state.cc",
+      "path": "onnxruntime/python/onnxruntime_pybind_state.cc",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/OuadiElfarouki/onnxruntime/blob/83280b9130ba35d46c614ad0dabba36219536b89/onnxruntime/python/onnxruntime_pybind_state.cc",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state.cc",
+      "path": "onnxruntime/python/onnxruntime_pybind_state.cc",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/sedie1234/onnxruntime_npu/blob/a2aeaaa090f8de9d7d1b536660b2e01cd7365b9e/onnxruntime/python/onnxruntime_pybind_state.cc",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state.cc",
+      "path": "onnxruntime/python/onnxruntime_pybind_state.cc",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/inteplus/onnxruntime/blob/8079c763835a594b3c76249398f92c3372901f23/onnxruntime/python/onnxruntime_pybind_state.cc",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state.cc",
+      "path": "onnxruntime/python/onnxruntime_pybind_state.cc",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/MetaX-MACA/Onnxruntime/blob/1acd81ff2d0179530d6428361cdba6429a9df62e/onnxruntime/python/onnxruntime_pybind_state.cc",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state.cc",
+      "path": "onnxruntime/python/onnxruntime_pybind_state.cc",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/mldlwizard/onnxruntime/blob/b891488e4c13aed34312e133624908fba9788fde/onnxruntime/python/onnxruntime_pybind_state.cc",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state.cc",
+      "path": "onnxruntime/python/onnxruntime_pybind_state.cc",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/deciding/ortold/blob/cf4ec2deb98b7b0eefee1d13e5586a9eb6f5dd00/onnxruntime/python/onnxruntime_pybind_state.cc",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state.cc",
+      "path": "onnxruntime/python/onnxruntime_pybind_state.cc",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/seokNULL/ort-pim-release/blob/7f672bfa310c9e4954786204238fc8e680e2173c/onnxruntime/python/onnxruntime_pybind_state.cc",
+      "kind": "code",
+      "name": "onnxruntime_pybind_state.cc",
+      "path": "onnxruntime/python/onnxruntime_pybind_state.cc",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/mojo-gpu-puzzles/blob/39b499b3539c073e96a845a877f0d5ce5082d7f4/problems/p20/p20.py",
+      "kind": "code",
+      "name": "p20.py",
+      "path": "problems/p20/p20.py",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/deepjavalibrary/djl/blob/1d6e0580e4112b711f2edb2bc2305b0eeb6607f5/engines/onnxruntime/onnxruntime-engine/src/main/java/ai/djl/onnxruntime/engine/OrtModel.java",
+      "kind": "code",
+      "name": "OrtModel.java",
+      "path": "engines/onnxruntime/onnxruntime-engine/src/main/java/ai/djl/onnxruntime/engine/OrtModel.java",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/mojo-gpu-puzzles/blob/39b499b3539c073e96a845a877f0d5ce5082d7f4/book/src/puzzle_20/puzzle_20.md",
+      "kind": "code",
+      "name": "puzzle_20.md",
+      "path": "book/src/puzzle_20/puzzle_20.md",
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/issues/5737",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "GPU custom op segfaults on CUDA (CustomOpLibrary / @compiler.register), CPU OK"
+    },
+    {
+      "html_url": "https://github.com/rerun-io/examples-monorepo/pull/26",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "Port MASt3R-SLAM to a Mojo-first matching and GN backend (Vibe Kanban)"
+    },
+    {
+      "html_url": "https://github.com/modular/mojo-gpu-puzzles/pull/235",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "Mdoc/fixes"
+    },
+    {
+      "html_url": "https://github.com/modular/mojo-gpu-puzzles/pull/222",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "Fix broken documentation links and unify URL paths"
+    },
+    {
+      "html_url": "https://github.com/tensara/tensara/pull/162",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "[Does not work] New version of mojo"
+    },
+    {
+      "html_url": "https://github.com/modular/modular/issues/5069",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "[BUG] mojo flash atten kernel is very slower than pytorch eager"
+    },
+    {
+      "html_url": "https://github.com/modular/modular/issues/5154",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "[BUG]: CustomOp caching incorrectly"
+    },
+    {
+      "html_url": "https://github.com/modular/modular/issues/4688",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "[BUG]: UNKOWN_VALUE with CustomOpLibrary causes illegal memory access"
+    },
+    {
+      "html_url": "https://github.com/modular/mojo-gpu-puzzles/issues/73",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "Puzzle 20: import statement for sizeof and argv not working in conv1d.mojo"
+    },
+    {
+      "html_url": "https://github.com/modular/modular/issues/5356",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "[BUG] async.wait is not working"
+    },
+    {
+      "html_url": "https://github.com/modular/modular/issues/4687",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "[BUG]: Graph compiler cache not being updated"
+    },
+    {
+      "html_url": "https://github.com/deepjavalibrary/djl-serving/issues/2630",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "Unable to set \"batchifier\" parameter in serving.properties"
+    },
+    {
+      "html_url": "https://github.com/tensorflow/java/issues/517",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "Error when using tensorflow-text on tensorflow-core"
+    },
+    {
+      "html_url": "https://github.com/deepjavalibrary/djl/issues/3461",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "Nuisance spurious debug error message when loading .onnx models"
+    },
+    {
+      "html_url": "https://github.com/microsoft/onnxruntime/pull/14066",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "Support loading widechar paths on windows"
+    },
+    {
+      "html_url": "https://github.com/microsoft/onnxruntime/pull/13427",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "Custom Op runtime wrapper"
+    },
+    {
+      "html_url": "https://github.com/deepjavalibrary/djl/issues/1804",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "ONNX Extensions"
+    },
+    {
+      "html_url": "https://github.com/microsoft/onnxruntime/pull/4764",
+      "kind": "issues",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": "Support RegisterCustomOpsLibrary via the Python API"
+    },
+    {
+      "html_url": "https://github.com/rerun-io/examples-monorepo/commit/6bfb09ffbde06ab4b09459733e868beeb0ed44df",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/DimQ1/nemotron-speech-csharp/commit/c705291c46d3a428655d317b6e1f6e2c56b5a704",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/rerun-io/examples-monorepo/commit/2153859661abb90d9782dd5caa61abba8d9fd16a",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/rerun-io/examples-monorepo/commit/f686873d6c8201f99ca707f8133a83d4e703f05a",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/rerun-io/examples-monorepo/commit/cd3a9d951f03082d2ca267da50b8f63293d4c2c1",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/rerun-io/examples-monorepo/commit/87fabb04bcdd9a422520fe1f5074d042a5b3e6a4",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/rerun-io/examples-monorepo/commit/3fe6bd060d751de5750552a6c01b7b0d810ff4f7",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/rerun-io/examples-monorepo/commit/072db9192495dff2cdb11f5735dd87c782c39592",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/albanread/WINMOJO/commit/ddf4efd9c857eed97b68e184c2fcf6bf2890084a",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/commit/ddf4efd9c857eed97b68e184c2fcf6bf2890084a",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/Ammar-Alnagar/modular-rs/commit/ddf4efd9c857eed97b68e184c2fcf6bf2890084a",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/albanread/maxdragon/commit/ddf4efd9c857eed97b68e184c2fcf6bf2890084a",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/Ivan-Vakhula07/modular/commit/ddf4efd9c857eed97b68e184c2fcf6bf2890084a",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/PMukund219/modular_backup/commit/ddf4efd9c857eed97b68e184c2fcf6bf2890084a",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/albanread/WINMOJO/commit/c875abd0a41956dc99ea8bcd709e92540f023bf3",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/commit/c875abd0a41956dc99ea8bcd709e92540f023bf3",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/Ammar-Alnagar/modular-rs/commit/c875abd0a41956dc99ea8bcd709e92540f023bf3",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/DimQ1/nemotron-speech-csharp/commit/3a139be689c290d48131589f83c223ded17c5b3a",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/rerun-io/examples-monorepo/commit/7e4b1e935e14f00f51c3f5761f3a8dac4f5e60d9",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/albanread/maxdragon/commit/c875abd0a41956dc99ea8bcd709e92540f023bf3",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/Ivan-Vakhula07/modular/commit/c875abd0a41956dc99ea8bcd709e92540f023bf3",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/PMukund219/modular_backup/commit/c875abd0a41956dc99ea8bcd709e92540f023bf3",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/JohnsonWang1015/FerroGrid/commit/9cea829ecc4e4df7edc67710312b898b7ee4eb24",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/albanread/WINMOJO/commit/342f829c9e4f110cb0322e9096697226419aca0e",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/modular/modular/commit/342f829c9e4f110cb0322e9096697226419aca0e",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/Ammar-Alnagar/modular-rs/commit/342f829c9e4f110cb0322e9096697226419aca0e",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/gabrieldemarmiesse/causal-conv1d-mojo/commit/8bbd0160802fe71d1def87678e917f94912614d9",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/DimQ1/nemotron-speech-csharp/commit/c52464121c18da1391653566ef3bd372742e1994",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/albanread/maxdragon/commit/342f829c9e4f110cb0322e9096697226419aca0e",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/Ivan-Vakhula07/modular/commit/342f829c9e4f110cb0322e9096697226419aca0e",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/PMukund219/modular_backup/commit/342f829c9e4f110cb0322e9096697226419aca0e",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    },
+    {
+      "html_url": "https://github.com/gabrieldemarmiesse/causal-conv1d-mojo/commit/b573c636ea54449504b25353538cc02a935a147a",
+      "kind": "commits",
+      "name": null,
+      "path": null,
+      "query": "\"customOpLibrary\"",
+      "title": null
+    }
+  ]
+}
