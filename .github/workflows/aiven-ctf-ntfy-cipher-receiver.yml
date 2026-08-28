@@ -1,0 +1,87 @@
+name: Aiven CTF receive encrypted ciphertext handoff
+
+on:
+  push:
+    branches:
+      - aiven-ctf-probe-20260826
+    paths:
+      - .github/workflows/aiven-ctf-ntfy-cipher-receiver.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aiven-ctf-ntfy-cipher-receiver
+  cancel-in-progress: false
+
+jobs:
+  receive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NTFY_TOPIC: aiven-ctf-cipher-handoff-20260829-73f6c91b2e4a8d05
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Poll for ciphertext-only handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/aiven-ntfy-receiver"
+          rm -rf "$work"
+          mkdir -p "$work"
+          found=false
+          for i in $(seq 1 120); do
+            curl -fsS --max-time 20 "https://ntfy.sh/$NTFY_TOPIC/json?poll=1&since=all" -o "$work/messages.jsonl" || true
+            python3 - "$work/messages.jsonl" "$work/meta.json" <<'PY'
+          import json,sys
+          from pathlib import Path
+          src=Path(sys.argv[1]);out=Path(sys.argv[2]);rows=[]
+          if src.exists():
+              for line in src.read_text(errors='replace').splitlines():
+                  try: rows.append(json.loads(line))
+                  except Exception: pass
+          metas=[]
+          for row in rows:
+              if row.get('title')!='aiven-ctf-cipher-meta': continue
+              try:
+                  m=json.loads(row.get('message') or '{}')
+              except Exception: continue
+              if m.get('filename')=='Aiven-CTF-Private-Delivery.enc' and m.get('url') and m.get('sha256'):
+                  metas.append((row.get('time',0),m))
+          if metas: out.write_text(json.dumps(sorted(metas,key=lambda x:x[0])[-1][1]))
+          PY
+            if [[ -s "$work/meta.json" ]]; then found=true; break; fi
+            sleep 10
+          done
+          $found
+          url=$(jq -r .url "$work/meta.json")
+          expected=$(jq -r .sha256 "$work/meta.json")
+          curl -fL --retry 5 --retry-all-errors --max-time 180 "$url" -o "$work/Aiven-CTF-Private-Delivery.enc"
+          actual=$(sha256sum "$work/Aiven-CTF-Private-Delivery.enc" | awk '{print $1}')
+          test "$actual" = "$expected"
+
+          dest=.ctf/aiven/ciphertext-handoff/latest
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          cp "$work/Aiven-CTF-Private-Delivery.enc" "$dest/"
+          printf '%s  Aiven-CTF-Private-Delivery.enc\n' "$actual" > "$dest/Aiven-CTF-Private-Delivery.enc.sha256"
+          printf '{"schema":"aiven-ctf-ciphertext-ready-v1","ready":true,"sha256":"%s"}\n' "$actual" > "$dest/READY.json"
+          cat > "$dest/README.md" <<'EOF'
+This directory contains only AES-256-CBC/PBKDF2 ciphertext for an authorized private Aiven CTF delivery. It contains no plaintext private key, report, credentials, or decryption passphrase.
+EOF
+
+      - name: Commit ciphertext only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'aiven-ctf-ciphertext-receiver-bot'
+          git config user.email '81894570+streetquant@users.noreply.github.com'
+          git add .ctf/aiven/ciphertext-handoff/latest
+          if ! git diff --cached --quiet; then
+            git commit -m 'Receive encrypted Aiven CTF ciphertext handoff'
+            git push origin HEAD:aiven-ctf-probe-20260826
+          fi
