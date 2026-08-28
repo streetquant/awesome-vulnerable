@@ -1,0 +1,24 @@
+{
+  "http_responses": 40,
+  "open_ports_by_ip": {
+    "150.136.73.18": [
+      443
+    ],
+    "193.122.144.9": [
+      22,
+      80,
+      443
+    ]
+  },
+  "postgres_classifications": [
+    "not_postgresql_tls",
+    "probe_error"
+  ],
+  "report_sha256": "84c90f053f5d55e9dfdd955dbc8016f3eaa2a19145d6d14ede3161b27d350523",
+  "run_finished_utc": "2026-08-28T20:16:45.296700+00:00",
+  "run_started_utc": "2026-08-28T20:15:59.988837+00:00",
+  "schema": "aiven-ctf-interface-probe-v1",
+  "ssh_keyscan_attempts": 1,
+  "target": "falcon-bug-bounty-flag-pgsql-dev-sandbox.e.aivencloud.com",
+  "trust_auth_sessions": 0
+}

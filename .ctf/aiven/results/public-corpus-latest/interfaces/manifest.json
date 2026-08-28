@@ -1,0 +1,16 @@
+{
+  "created_at_utc": "2026-08-28T20:16:45.298760+00:00",
+  "files": [
+    {
+      "bytes": 148497,
+      "path": "interface-probe.json",
+      "sha256": "84c90f053f5d55e9dfdd955dbc8016f3eaa2a19145d6d14ede3161b27d350523"
+    },
+    {
+      "bytes": 612,
+      "path": "summary.json",
+      "sha256": "59bc6f6efeb5bd99690b5cb310958ee3a64d6182e313cf59447491a5572e403d"
+    }
+  ],
+  "schema": "aiven-ctf-interface-probe-manifest-v1"
+}

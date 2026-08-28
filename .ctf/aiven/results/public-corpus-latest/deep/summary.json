@@ -1,0 +1,262 @@
+{
+  "candidate_name_count": 6,
+  "open_ports_by_ip": {
+    "13.51.44.83": [
+      80,
+      443,
+      16127
+    ],
+    "138.68.165.20": [
+      9273,
+      25060,
+      25061
+    ],
+    "150.136.73.18": [
+      443
+    ],
+    "193.122.144.9": [
+      22,
+      80,
+      443,
+      25565
+    ],
+    "194.182.187.91": [
+      80,
+      443,
+      21699
+    ],
+    "20.123.69.231": [
+      80,
+      443,
+      10545
+    ],
+    "205.251.193.85": [
+      53
+    ],
+    "34.138.52.30": [
+      23557
+    ],
+    "34.14.125.242": [
+      80,
+      443,
+      25798
+    ],
+    "34.147.192.142": [
+      80,
+      443,
+      15960
+    ],
+    "34.40.14.103": [
+      80,
+      443
+    ],
+    "35.190.178.170": [
+      23557
+    ]
+  },
+  "passive_candidate_ip_count": 23,
+  "report_sha256": "10a5c639bd4b7a3a8159d176acf5e39f43f4442bd884cc9904dbef49bc6c2ca6",
+  "reverse_dns": {
+    "13.51.44.83": [
+      "ec2-13-51-44-83.eu-north-1.compute.amazonaws.com",
+      [],
+      [
+        "13.51.44.83"
+      ]
+    ],
+    "205.251.193.85": [
+      "ns-341.awsdns-42.com",
+      [],
+      [
+        "205.251.193.85"
+      ]
+    ],
+    "34.138.52.30": [
+      "30.52.138.34.bc.googleusercontent.com",
+      [],
+      [
+        "34.138.52.30"
+      ]
+    ],
+    "34.14.125.242": [
+      "242.125.14.34.bc.googleusercontent.com",
+      [],
+      [
+        "34.14.125.242"
+      ]
+    ],
+    "34.147.192.142": [
+      "142.192.147.34.bc.googleusercontent.com",
+      [],
+      [
+        "34.147.192.142"
+      ]
+    ],
+    "34.40.14.103": [
+      "103.14.40.34.bc.googleusercontent.com",
+      [],
+      [
+        "34.40.14.103"
+      ]
+    ],
+    "35.190.178.170": [
+      "170.178.190.35.bc.googleusercontent.com",
+      [],
+      [
+        "35.190.178.170"
+      ]
+    ]
+  },
+  "run_finished_utc": "2026-08-28T20:15:59.916773+00:00",
+  "run_started_utc": "2026-08-28T19:46:33.706064+00:00",
+  "scanned_ips": [
+    "150.136.73.18",
+    "193.122.144.9",
+    "13.51.44.83",
+    "138.68.165.20",
+    "194.182.187.91",
+    "20.123.69.231",
+    "205.251.193.85",
+    "34.138.52.30",
+    "34.14.125.242",
+    "34.147.192.142",
+    "34.40.14.103",
+    "35.190.178.170"
+  ],
+  "schema": "aiven-ctf-deep-target-derived-recon-v1",
+  "source_statuses": {
+    "bing_exact": {
+      "bytes": 118324,
+      "error": null,
+      "sha256": "fec9b49646f5d01830f13ad31829c5d7b739e67b3a0b2ad8b5f53c6e0d71a245",
+      "status": 200
+    },
+    "bing_old": {
+      "bytes": 118442,
+      "error": null,
+      "sha256": "dc742c6c667d4402804c92f64db309311f54af7d9c8f7b9aa20e0199f621dc1e",
+      "status": 200
+    },
+    "cloudflare_doh_old": {
+      "bytes": 296,
+      "error": null,
+      "sha256": "c5fe1eb1ab8e65108bb1dd0a9827f3750df38a92c3dd325ef80f76f58c9e3a06",
+      "status": 200
+    },
+    "cloudflare_doh_target": {
+      "bytes": 299,
+      "error": null,
+      "sha256": "655964974ce249d66b14ac5a2f2986f25a846282f54e4056e8d7a2a7b4f40b56",
+      "status": 200
+    },
+    "crt_old": {
+      "bytes": null,
+      "error": "HTTPError: HTTP Error 502: Bad Gateway",
+      "sha256": null,
+      "status": null
+    },
+    "crt_prefix": {
+      "bytes": null,
+      "error": "HTTPError: HTTP Error 502: Bad Gateway",
+      "sha256": null,
+      "status": null
+    },
+    "crt_target": {
+      "bytes": null,
+      "error": "HTTPError: HTTP Error 502: Bad Gateway",
+      "sha256": null,
+      "status": null
+    },
+    "duckduckgo_exact": {
+      "bytes": 14324,
+      "error": null,
+      "sha256": "ce587ab72e00ba48463b6f7174ae7ef09e482b30d0cc0186eb80051e0391476e",
+      "status": 202
+    },
+    "duckduckgo_old": {
+      "bytes": 14314,
+      "error": null,
+      "sha256": "1654ec6e263156eb747f99167f56ea559ae70633f0745ba7a3d335518dacb00f",
+      "status": 202
+    },
+    "google_doh_old": {
+      "bytes": 341,
+      "error": null,
+      "sha256": "28f8b81c06487cfcaead9b35916c8579776e26551ba351a4ebe4b5d08e2a02ef",
+      "status": 200
+    },
+    "google_doh_target": {
+      "bytes": 343,
+      "error": null,
+      "sha256": "95ef2a42f4bf682f4ba5afb129c323178e57121a9dc32fd38712e42956b3bcc2",
+      "status": 200
+    },
+    "hackertarget_e_hostsearch": {
+      "bytes": 1161,
+      "error": null,
+      "sha256": "ca7848c14d5e23f9a8f116769d66c1ea1eb250374bc6e2cb7ea85780748196ca",
+      "status": 200
+    },
+    "hackertarget_old_dns": {
+      "bytes": 42,
+      "error": null,
+      "sha256": "5730040e49b7239214861d03d49bba0ffe70585f150b297d1c09e64826ecfc9d",
+      "status": 200
+    },
+    "hackertarget_target_dns": {
+      "bytes": 42,
+      "error": null,
+      "sha256": "5730040e49b7239214861d03d49bba0ffe70585f150b297d1c09e64826ecfc9d",
+      "status": 200
+    },
+    "otx_old_pdns": {
+      "bytes": 31,
+      "error": null,
+      "sha256": "daf0f3833d05c143dee8c66b3cdd8ebba9c1d7dfa32a6056d43dfe452bd41310",
+      "status": 200
+    },
+    "otx_target_pdns": {
+      "bytes": 31,
+      "error": null,
+      "sha256": "daf0f3833d05c143dee8c66b3cdd8ebba9c1d7dfa32a6056d43dfe452bd41310",
+      "status": 200
+    },
+    "robtex_old": {
+      "bytes": 825,
+      "error": null,
+      "sha256": "f8d1c29c4f1df2c69ce23372ed8fd877a11d09d38ca1c9202e9bd82cf53f0382",
+      "status": 200
+    },
+    "robtex_target": {
+      "bytes": 166,
+      "error": null,
+      "sha256": "600a525ed6b84197553e119ed654e05605d823086ea5c8d5133f695be3fb3247",
+      "status": 200
+    },
+    "threatminer_old_pdns": {
+      "bytes": null,
+      "error": "HTTPError: HTTP Error 522: <none>",
+      "sha256": null,
+      "status": null
+    },
+    "threatminer_target_pdns": {
+      "bytes": null,
+      "error": "HTTPError: HTTP Error 522: <none>",
+      "sha256": null,
+      "status": null
+    },
+    "urlscan_old": {
+      "bytes": 7060,
+      "error": null,
+      "sha256": "aa1de4b8c552baa4b441d8ec95ebc68e74826910f4d75c11027d2678ab7b1113",
+      "status": 200
+    },
+    "urlscan_target": {
+      "bytes": 69,
+      "error": null,
+      "sha256": "af9d4ecaee8a8eff477d55e9519791cd9d3a16475f77d7ff1e9e89b41a482045",
+      "status": 200
+    }
+  },
+  "target": "falcon-bug-bounty-flag-pgsql-dev-sandbox.e.aivencloud.com"
+}

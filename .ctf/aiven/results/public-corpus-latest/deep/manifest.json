@@ -1,0 +1,16 @@
+{
+  "created_at_utc": "2026-08-28T20:15:59.921745+00:00",
+  "files": [
+    {
+      "bytes": 583433,
+      "path": "deep-recon.json",
+      "sha256": "10a5c639bd4b7a3a8159d176acf5e39f43f4442bd884cc9904dbef49bc6c2ca6"
+    },
+    {
+      "bytes": 6076,
+      "path": "summary.json",
+      "sha256": "f16bb00ee52d4c16fa805565702e7eb50b69333b06738992ae0a3a804d1b6f56"
+    }
+  ],
+  "schema": "aiven-ctf-deep-recon-manifest-v1"
+}
