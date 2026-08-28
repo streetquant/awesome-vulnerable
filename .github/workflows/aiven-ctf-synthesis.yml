@@ -1,0 +1,44 @@
+name: Aiven CTF evidence synthesis
+
+on:
+  push:
+    branches:
+      - aiven-ctf-probe-20260826
+    paths:
+      - .ctf/aiven/synthesize.py
+      - .ctf/aiven/results/**
+      - .github/workflows/aiven-ctf-synthesis.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aiven-ctf-synthesis-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  synthesize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Synthesize only inspected committed summaries
+        run: python3 .ctf/aiven/synthesize.py
+      - name: Commit synthesis
+        run: |
+          set -euo pipefail
+          dest=.ctf/aiven/results/synthesis-latest
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          cp probe-output/synthesis/summary.json "$dest/"
+          cp probe-output/synthesis/manifest.json "$dest/"
+          git config user.name 'aiven-ctf-recon-bot'
+          git config user.email '81894570+streetquant@users.noreply.github.com'
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish evidence-driven Aiven CTF synthesis'
+            git push origin HEAD:aiven-ctf-probe-20260826
+          fi
