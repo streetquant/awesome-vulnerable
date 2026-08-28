@@ -1,0 +1,60 @@
+name: Aiven CTF authenticated public source clue search
+
+on:
+  push:
+    branches:
+      - aiven-ctf-probe-20260826
+    paths:
+      - .ctf/aiven/github_clue_search.py
+      - .github/workflows/aiven-ctf-github-clues.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out isolated probe branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Validate source
+        run: |
+          set -euo pipefail
+          python3 -m py_compile .ctf/aiven/github_clue_search.py
+          sha256sum .ctf/aiven/github_clue_search.py .github/workflows/aiven-ctf-github-clues.yml
+
+      - name: Search authenticated public GitHub sources
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .ctf/aiven/github_clue_search.py
+
+      - name: Publish sanitized search summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=.ctf/aiven/results/github-clues-latest
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          find probe-output/github-clues -type f \( -name 'summary.json' -o -name 'manifest.json' \) -exec cp {} "$dest/" \;
+          git config user.name 'aiven-ctf-recon-bot'
+          git config user.email '81894570+streetquant@users.noreply.github.com'
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish sanitized Aiven CTF GitHub clue summary'
+            git push origin HEAD:aiven-ctf-probe-20260826
+          fi
+
+      - name: Upload raw search evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aiven-ctf-github-clues-${{ github.run_id }}
+          path: probe-output/github-clues/
+          if-no-files-found: error
+          retention-days: 1
