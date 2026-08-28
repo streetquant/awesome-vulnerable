@@ -1,0 +1,12 @@
+{
+  "downloaded": false,
+  "error": "no ciphertext metadata observed before polling deadline",
+  "found_meta": false,
+  "observed_at_utc": "2026-08-28T21:24:45.571822+00:00",
+  "schema": "aiven-ctf-ntfy-diagnostic-v1",
+  "state": {
+    "message_count": 0,
+    "statuses": [],
+    "titles": []
+  }
+}
