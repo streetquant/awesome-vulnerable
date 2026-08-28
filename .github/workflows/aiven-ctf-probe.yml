@@ -7,6 +7,7 @@ on:
     paths:
       - .ctf/aiven/probe.py
       - .ctf/aiven/discover.py
+      - .ctf/aiven/active_scan.py
       - .github/workflows/aiven-ctf-probe.yml
   workflow_dispatch:
 
@@ -16,26 +17,29 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Check out isolated probe branch
         uses: actions/checkout@v4
 
-      - name: Install DNS utility
+      - name: Install bounded network utilities
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq dnsutils
+          sudo apt-get install -y -qq dnsutils nmap
 
       - name: Validate probe sources and workflow
         run: |
-          python3 -m py_compile .ctf/aiven/probe.py .ctf/aiven/discover.py
-          sha256sum .ctf/aiven/probe.py .ctf/aiven/discover.py .github/workflows/aiven-ctf-probe.yml
+          python3 -m py_compile .ctf/aiven/probe.py .ctf/aiven/discover.py .ctf/aiven/active_scan.py
+          sha256sum .ctf/aiven/probe.py .ctf/aiven/discover.py .ctf/aiven/active_scan.py .github/workflows/aiven-ctf-probe.yml
 
       - name: Discover current challenge-derived service names
         run: python3 .ctf/aiven/discover.py
 
       - name: Recheck exact target and last known endpoint
         run: python3 .ctf/aiven/probe.py
+
+      - name: Probe target-derived passive IP and authoritative DNS
+        run: python3 .ctf/aiven/active_scan.py
 
       - name: Upload raw probe evidence
         if: always()
