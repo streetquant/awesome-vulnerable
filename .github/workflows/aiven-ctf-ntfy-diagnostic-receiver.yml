@@ -1,0 +1,116 @@
+name: Aiven CTF diagnostic ciphertext receiver
+
+on:
+  push:
+    branches:
+      - aiven-ctf-probe-20260826
+    paths:
+      - .github/workflows/aiven-ctf-ntfy-diagnostic-receiver.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aiven-ctf-ntfy-diagnostic-receiver
+  cancel-in-progress: false
+
+jobs:
+  receive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NTFY_TOPIC: aiven-ctf-cipher-handoff-20260829-73f6c91b2e4a8d05
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Poll, diagnose, and receive ciphertext when available
+        shell: bash
+        run: |
+          set -u
+          work="$RUNNER_TEMP/aiven-ntfy-diagnostic"
+          dest=.ctf/aiven/ciphertext-handoff/latest
+          diag=.ctf/aiven/ciphertext-handoff/diagnostic.json
+          rm -rf "$work"
+          mkdir -p "$work" "$(dirname "$diag")"
+          found=false
+          downloaded=false
+          error=''
+          for i in $(seq 1 90); do
+            if ! curl -fsS --max-time 20 "https://ntfy.sh/$NTFY_TOPIC/json?poll=1&since=all" -o "$work/messages.jsonl"; then
+              error='ntfy poll failed'
+            fi
+            python3 - "$work/messages.jsonl" "$work/state.json" <<'PY'
+          import json,sys
+          from pathlib import Path
+          src=Path(sys.argv[1]);out=Path(sys.argv[2]);rows=[]
+          if src.exists():
+              for line in src.read_text(errors='replace').splitlines():
+                  try: rows.append(json.loads(line))
+                  except Exception: pass
+          metas=[];statuses=[]
+          for row in rows:
+              title=row.get('title')
+              if title=='aiven-ctf-cipher-meta':
+                  try:m=json.loads(row.get('message') or '{}')
+                  except Exception:continue
+                  if m.get('filename')=='Aiven-CTF-Private-Delivery.enc' and m.get('url') and m.get('sha256'):metas.append((row.get('time',0),m))
+              elif title=='aiven-ctf-cipher-status':
+                  try:statuses.append(json.loads(row.get('message') or '{}'))
+                  except Exception:statuses.append({'raw':str(row.get('message'))[:500]})
+          data={'message_count':len(rows),'titles':[str(r.get('title')) for r in rows[-30:]],'statuses':statuses[-30:]}
+          if metas:data['meta']=sorted(metas,key=lambda x:x[0])[-1][1]
+          out.write_text(json.dumps(data,indent=2,sort_keys=True)+'\n')
+          PY
+            if jq -e '.meta.url and .meta.sha256' "$work/state.json" >/dev/null 2>&1; then found=true; break; fi
+            sleep 10
+          done
+          if $found; then
+            url=$(jq -r .meta.url "$work/state.json")
+            expected=$(jq -r .meta.sha256 "$work/state.json")
+            if curl -fL --retry 5 --retry-all-errors --max-time 180 "$url" -o "$work/Aiven-CTF-Private-Delivery.enc"; then
+              actual=$(sha256sum "$work/Aiven-CTF-Private-Delivery.enc" | awk '{print $1}')
+              if [[ "$actual" == "$expected" ]]; then
+                downloaded=true
+                rm -rf "$dest"
+                mkdir -p "$dest"
+                cp "$work/Aiven-CTF-Private-Delivery.enc" "$dest/"
+                printf '%s  Aiven-CTF-Private-Delivery.enc\n' "$actual" > "$dest/Aiven-CTF-Private-Delivery.enc.sha256"
+                printf '{"schema":"aiven-ctf-ciphertext-ready-v1","ready":true,"sha256":"%s"}\n' "$actual" > "$dest/READY.json"
+                printf '%s\n' 'Ciphertext only; no private plaintext or passphrase is committed.' > "$dest/README.md"
+              else
+                error='downloaded ciphertext SHA-256 mismatch'
+              fi
+            else
+              error='ciphertext attachment download failed'
+            fi
+          else
+            error='no ciphertext metadata observed before polling deadline'
+          fi
+          python3 - "$work/state.json" "$diag" "$found" "$downloaded" "$error" <<'PY'
+          import json,sys
+          from datetime import datetime,timezone
+          from pathlib import Path
+          state={}
+          p=Path(sys.argv[1])
+          if p.exists():
+              try:state=json.loads(p.read_text())
+              except Exception:pass
+          out={'schema':'aiven-ctf-ntfy-diagnostic-v1','observed_at_utc':datetime.now(timezone.utc).isoformat(),'found_meta':sys.argv[3]=='true','downloaded':sys.argv[4]=='true','error':sys.argv[5],'state':state}
+          Path(sys.argv[2]).write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          PY
+
+      - name: Commit diagnostic and any ciphertext
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'aiven-ctf-diagnostic-receiver-bot'
+          git config user.email '81894570+streetquant@users.noreply.github.com'
+          git add .ctf/aiven/ciphertext-handoff
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record Aiven CTF ciphertext handoff diagnostics'
+            git push origin HEAD:aiven-ctf-probe-20260826
+          fi
