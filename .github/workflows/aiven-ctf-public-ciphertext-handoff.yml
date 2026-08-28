@@ -1,0 +1,59 @@
+name: Aiven CTF publish encrypted ciphertext handoff
+
+on:
+  push:
+    branches:
+      - aiven-ctf-probe-20260826
+    paths:
+      - .github/workflows/aiven-ctf-public-ciphertext-handoff.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aiven-ctf-public-ciphertext-handoff
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: self-hosted
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          clean: false
+
+      - name: Wait for encrypted shared handoff and publish ciphertext only
+        shell: bash
+        run: |
+          set -euo pipefail
+          shared=/8tb/bug-bounty/aiven/output/.relay-public
+          for i in $(seq 1 120); do
+            if [[ -f "$shared/READY.json" && -f "$shared/Aiven-CTF-Private-Delivery.enc" && -f "$shared/Aiven-CTF-Private-Delivery.enc.sha256" ]]; then
+              break
+            fi
+            sleep 10
+          done
+          test -f "$shared/READY.json"
+          test -f "$shared/Aiven-CTF-Private-Delivery.enc"
+          test -f "$shared/Aiven-CTF-Private-Delivery.enc.sha256"
+          sha256sum -c "$shared/Aiven-CTF-Private-Delivery.enc.sha256"
+
+          dest=.ctf/aiven/ciphertext-handoff/latest
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          cp "$shared/Aiven-CTF-Private-Delivery.enc" "$dest/"
+          cp "$shared/Aiven-CTF-Private-Delivery.enc.sha256" "$dest/"
+          cp "$shared/READY.json" "$dest/"
+          cat > "$dest/README.md" <<'EOF'
+This directory contains only AES-256-CBC/PBKDF2 ciphertext for a private, authorized Aiven CTF delivery. No plaintext key, report, credential, or passphrase is committed here.
+EOF
+          git config user.name 'aiven-ctf-ciphertext-handoff-bot'
+          git config user.email '81894570+streetquant@users.noreply.github.com'
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish encrypted Aiven CTF ciphertext handoff'
+            git push origin HEAD:aiven-ctf-probe-20260826
+          fi
