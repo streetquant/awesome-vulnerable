@@ -1,0 +1,44 @@
+name: Aiven CTF challenge-derived variant probe
+
+on:
+  push:
+    branches:
+      - aiven-ctf-probe-20260826
+    paths:
+      - .ctf/aiven/variant_probe.py
+      - .github/workflows/aiven-ctf-variant-probe.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out isolated probe branch
+        uses: actions/checkout@v4
+
+      - name: Install bounded probe dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dnsutils nmap
+          python3 -m pip install --disable-pip-version-check dnspython
+
+      - name: Validate source
+        run: |
+          python3 -m py_compile .ctf/aiven/variant_probe.py
+          sha256sum .ctf/aiven/variant_probe.py .github/workflows/aiven-ctf-variant-probe.yml
+
+      - name: Run challenge-derived DNS and protocol probe
+        run: python3 .ctf/aiven/variant_probe.py
+
+      - name: Upload raw evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aiven-ctf-variant-probe-${{ github.run_id }}
+          path: probe-output/variants/
+          if-no-files-found: error
+          retention-days: 1
