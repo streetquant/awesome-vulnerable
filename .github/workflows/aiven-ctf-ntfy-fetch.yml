@@ -1,0 +1,81 @@
+name: Aiven CTF fetch encrypted handoff records
+
+on:
+  push:
+    branches:
+      - aiven-ctf-probe-20260826
+    paths:
+      - .github/workflows/aiven-ctf-ntfy-fetch.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch ciphertext-only handoff topics
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p ntfy-handoff
+          python3 - <<'PY'
+          from __future__ import annotations
+          import hashlib,json,urllib.request
+          from pathlib import Path
+
+          topics=[
+            'aiven-ctf-9f6d8b1c2a4e7f0b3d5c6a8e1f2b4c7d',
+            'aiven-ctf-cipher-handoff-20260829-73f6c91b2e4a8d05',
+            'aiven-ctf-delivery-6c1fd7e29a4b3c8d5e0f2a7b9c4d1e6f',
+          ]
+          out=Path('ntfy-handoff')
+          summary={'schema':'aiven-ctf-ntfy-ciphertext-fetch-v1','topics':[]}
+          def get(url,timeout=120):
+              req=urllib.request.Request(url,headers={'User-Agent':'Aiven-CTF-authorized-ciphertext-fetch/1.0'})
+              with urllib.request.urlopen(req,timeout=timeout) as r:return r.read()
+          def sha(b):return hashlib.sha256(b).hexdigest()
+          for idx,topic in enumerate(topics):
+              row={'index':idx,'topic_sha256':sha(topic.encode()),'events':0,'attachments':[],'errors':[]}
+              try:
+                  raw=get(f'https://ntfy.sh/{topic}/json?poll=1&since=all')
+                  (out/f'topic-{idx}.jsonl').write_bytes(raw)
+                  row.update({'bytes':len(raw),'sha256':sha(raw)})
+              except Exception as e:
+                  row['errors'].append(f'{type(e).__name__}: {e}')
+                  summary['topics'].append(row);continue
+              for line_no,line in enumerate(raw.splitlines(),1):
+                  try:event=json.loads(line)
+                  except Exception:continue
+                  row['events']+=1
+                  attachment=event.get('attachment') or {}
+                  url=attachment.get('url') if isinstance(attachment,dict) else None
+                  msg=str(event.get('message') or '')
+                  if not url and msg.startswith('{'):
+                      try:url=(json.loads(msg) or {}).get('url')
+                      except Exception:pass
+                  if not url:continue
+                  try:
+                      payload=get(str(url),180)
+                      name=f'topic-{idx}-attachment-{line_no}.bin'
+                      (out/name).write_bytes(payload)
+                      row['attachments'].append({'name':name,'bytes':len(payload),'sha256':sha(payload)})
+                  except Exception as e:
+                      row['errors'].append(f'attachment-{line_no}:{type(e).__name__}:{e}')
+              summary['topics'].append(row)
+          (out/'summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({'topics':len(topics),'events':sum(x['events'] for x in summary['topics']),'attachments':sum(len(x['attachments']) for x in summary['topics'])},sort_keys=True))
+          PY
+
+      - name: Upload encrypted handoff records
+        uses: actions/upload-artifact@v4
+        with:
+          name: aiven-ctf-encrypted-handoff-records-${{ github.run_id }}
+          path: ntfy-handoff/
+          if-no-files-found: error
+          retention-days: 1
