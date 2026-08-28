@@ -1,0 +1,48 @@
+name: Aiven CTF public reconnaissance corpus
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - aiven-ctf-probe-20260826
+    paths:
+      - .github/workflows/aiven-ctf-public-evidence-corpus.yml
+
+permissions:
+  contents: write
+
+jobs:
+  corpus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dnsutils nmap jq postgresql-client openssh-client
+      - name: Run public-data-only recon
+        run: |
+          set -euo pipefail
+          python3 .ctf/aiven/clue_research.py
+          python3 .ctf/aiven/deep_recon.py
+          python3 .ctf/aiven/interface_probe.py
+      - name: Commit bounded public corpus
+        run: |
+          set -euo pipefail
+          dest=.ctf/aiven/results/public-corpus-latest
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          cp -a probe-output/clues/. "$dest/clues"
+          cp -a probe-output/deep/. "$dest/deep"
+          cp -a probe-output/interfaces/. "$dest/interfaces"
+          find "$dest" -type f -size +45M -delete
+          git config user.name 'aiven-ctf-recon-bot'
+          git config user.email '81894570+streetquant@users.noreply.github.com'
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish bounded public Aiven CTF evidence corpus'
+            git push origin HEAD:aiven-ctf-probe-20260826
+          fi
