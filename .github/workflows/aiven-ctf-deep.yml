@@ -1,0 +1,85 @@
+name: Aiven CTF deep target-derived research
+
+on:
+  push:
+    branches:
+      - aiven-ctf-probe-20260826
+    paths:
+      - .ctf/aiven/deep_recon.py
+      - .ctf/aiven/clue_research.py
+      - .github/workflows/aiven-ctf-deep.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aiven-ctf-deep-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  investigate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out isolated probe branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Install bounded utilities
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dnsutils nmap jq
+
+      - name: Validate research sources
+        run: |
+          set -euo pipefail
+          python3 -m py_compile .ctf/aiven/deep_recon.py .ctf/aiven/clue_research.py
+          sha256sum .ctf/aiven/deep_recon.py .ctf/aiven/clue_research.py .github/workflows/aiven-ctf-deep.yml
+
+      - name: Research historical exploit clues
+        run: python3 .ctf/aiven/clue_research.py
+
+      - name: Run deeper target-derived reconnaissance
+        run: python3 .ctf/aiven/deep_recon.py
+
+      - name: Publish sanitized summaries
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=.ctf/aiven/results/deep-latest
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          find probe-output -type f \( -name 'summary.json' -o -name 'manifest.json' \) -print0 | while IFS= read -r -d '' f; do
+            rel=${f#probe-output/}
+            safe=$(printf '%s' "$rel" | tr '/' '_')
+            cp "$f" "$dest/$safe"
+          done
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          root=Path('.ctf/aiven/results/deep-latest')
+          files=[]
+          for p in sorted(root.glob('*')):
+              if not p.is_file() or p.name=='INDEX.json': continue
+              b=p.read_bytes(); files.append({'path':p.name,'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()})
+          (root/'INDEX.json').write_text(json.dumps({'schema':'aiven-ctf-deep-public-summary-index-v1','files':files},indent=2,sort_keys=True)+'\n')
+          PY
+          git config user.name 'aiven-ctf-recon-bot'
+          git config user.email '81894570+streetquant@users.noreply.github.com'
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish sanitized deep Aiven CTF research summaries'
+            git push origin HEAD:aiven-ctf-probe-20260826
+          fi
+
+      - name: Upload raw research evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aiven-ctf-deep-research-${{ github.run_id }}
+          path: probe-output/
+          if-no-files-found: error
+          retention-days: 1
