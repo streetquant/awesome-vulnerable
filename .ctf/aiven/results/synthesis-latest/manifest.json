@@ -1,0 +1,11 @@
+{
+  "created_at_utc": "2026-08-28T19:45:24.609252+00:00",
+  "files": [
+    {
+      "bytes": 1729,
+      "path": "summary.json",
+      "sha256": "3cb2dfaa19de0de4aeb7ceef375758489b1fdd7a6f903ebdc3f4043526d7507f"
+    }
+  ],
+  "schema": "aiven-ctf-synthesis-manifest-v1"
+}

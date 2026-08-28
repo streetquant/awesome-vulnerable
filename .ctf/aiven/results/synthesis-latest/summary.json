@@ -1,0 +1,65 @@
+{
+  "created_at_utc": "2026-08-28T19:45:24.609252+00:00",
+  "cve_2026_46242": {},
+  "github_query_counts": {
+    "\"CVE-2026-46242\"": {
+      "code": 50,
+      "commits": 50,
+      "issues": 50
+    },
+    "\"customOpLibrary\"": {
+      "code": 50,
+      "commits": 50,
+      "issues": 18
+    },
+    "\"execute_maybe_sent\"": {
+      "code": 0,
+      "commits": 0,
+      "issues": 0
+    },
+    "\"falcon-bug-bounty-flag-pgsql\"": {
+      "code": 0,
+      "commits": 0,
+      "issues": 0
+    },
+    "\"pre_registration_before\"": {
+      "code": 0,
+      "commits": 50,
+      "issues": 0
+    },
+    "\"root_entered\" \"private_key_recovered\"": {
+      "code": 0,
+      "commits": 0,
+      "issues": 0
+    },
+    "\"service_instance_boundary\"": {
+      "code": 0,
+      "commits": 4,
+      "issues": 0
+    },
+    "\"supervisor_status_reconcile\"": {
+      "code": 0,
+      "commits": 2,
+      "issues": 0
+    }
+  },
+  "missing": [
+    "fresh target key bytes",
+    "target provenance for exact key read",
+    "ssh-keygen validation",
+    "current target-attributed external IP",
+    "reproducible exploit chain"
+  ],
+  "next_action": "Recover the current assigned service instance from the private workspace/Bugcrowd session; historical IP replay is exhausted.",
+  "open_ports_by_ip": {},
+  "postgres_classifications": [],
+  "schema": "aiven-ctf-synthesis-v1",
+  "solved": false,
+  "source_files": {
+    "clue_summary": ".ctf/aiven/results/github-clues-corpus/summary.json",
+    "clues": ".ctf/aiven/results/github-clues-corpus/github-clue-search.json",
+    "interface": ".ctf/aiven/results/github-clues-corpus/summary.json"
+  },
+  "state": "no_current_target_resolution_or_live_interface_observed",
+  "trust_auth_sessions": 0
+}
