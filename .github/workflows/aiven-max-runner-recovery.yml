@@ -1,0 +1,98 @@
+name: Aiven CTF Max runner encrypted recovery
+
+on:
+  push:
+    branches:
+      - aiven-ctf-probe-20260826
+    paths:
+      - .github/workflows/aiven-max-runner-recovery.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aiven-max-runner-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: self-hosted
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: false
+
+      - name: Inspect Max workspace and encrypt recovery status
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          work="$RUNNER_TEMP/aiven-max-recovery-$GITHUB_RUN_ID"
+          rm -rf "$work"
+          mkdir -p "$work/private" "$work/public"
+          cat > "$work/public-key.pem" <<'PUBKEY'
+-----BEGIN PUBLIC KEY-----
+MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAj/tAsCeJ5JGrk8HthQtk
+blRCQ+TMJuHBNkWt8GskCUZ0oPfiWne/Wwbh8bZ8ZghAeVs3KEtp5U4B3hq9MFMg
+uwzEjndKaGIi46OZzUxUDRVib88K3m9kvWI7l+x7WP763ePtkc6wtArgZuS7/PMq
+Y7XKNhSA+mvYlL5PnWHa/tFFXxnpUFtWXwQsHy2QzQ7v0+eFyAmaRvwRgAmrHj9b
+aVCfijwB/DJ9ha5xYHds/mwL0zruu5Z9N0RUWdWZf7COL/UFn2AdhBjhFsnqpFvI
+7g+REMDV+LwjxdMyWs7zXeMkYFohPVBrlQsUUvoi8EOMoIjr08AGIpeLDiGTw5hs
+AICx6gu0SA7rgwDMFyIgmkXWSfGxR9bzMb7EYCRtLYZmFj7Jou//tf3bdzv24Caz
++BUCmnmMsFNWvoWJ3DBD5iDm5PxHuVllqYWrYQiPahQg15oGYICmCb6nd6FNTumc
+gpy4Sa0dGlj9h+QDq/ncDd7jvUfQ9YKcwRB25yd+dTR7AgMBAAE=
+-----END PUBLIC KEY-----
+PUBKEY
+          python3 - "$work" <<'PY'
+          from pathlib import Path
+          import datetime as dt, hashlib, json, re, sys
+          work=Path(sys.argv[1])
+          root=Path('/8tb/bug-bounty/aiven')
+          target='falcon-bug-bounty-flag-pgsql-dev-sandbox.e.aivencloud.com'
+          status={
+            'schema':'aiven-max-runner-recovery-status-v1',
+            'observed_at_utc':dt.datetime.now(dt.timezone.utc).isoformat(),
+            'target':target,
+            'workspace_exists':root.is_dir(),
+            'output_files':{},
+            'candidate_evidence_counts':{},
+            'solved':False,
+            'unknown_after_io':False,
+          }
+          for name in ('Aiven-CTF-Private-Report.md','Aiven-CTF-Private-Submission.zip','Aiven-CTF-Delivery-Manifest.json'):
+            p=root/'output'/name
+            status['output_files'][name]={'exists':p.is_file(),'bytes':p.stat().st_size if p.is_file() else None,'sha256':hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else None}
+          patterns={
+            'postgres_uri':re.compile(rb'postgres(?:ql)?://',re.I),
+            'target':re.compile(target.encode(),re.I),
+            'private_key_marker':re.compile(rb'-----BEGIN OPENSSH PRIVATE KEY-----'),
+            'aiven_token_hint':re.compile(rb'(?:AIVEN_TOKEN|app_token|aiven-client)',re.I),
+          }
+          counts={k:0 for k in patterns}
+          if root.is_dir():
+            for p in root.rglob('*'):
+              try:
+                if not p.is_file() or p.is_symlink() or p.stat().st_size>20_000_000: continue
+                raw=p.read_bytes()
+                for k,rx in patterns.items():
+                  if rx.search(raw): counts[k]+=1
+              except Exception: pass
+          status['candidate_evidence_counts']=counts
+          (work/'public'/'status.json').write_text(json.dumps(status,indent=2,sort_keys=True)+'\n')
+          PY
+          tar -C "$work/public" -czf "$work/status.tar.gz" .
+          openssl rand 32 > "$work/aes.key"
+          openssl enc -aes-256-cbc -salt -pbkdf2 -pass file:"$work/aes.key" -in "$work/status.tar.gz" -out "$work/status.tar.gz.enc"
+          openssl pkeyutl -encrypt -pubin -inkey "$work/public-key.pem" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -in "$work/aes.key" -out "$work/aes.key.enc"
+          cp "$work/status.tar.gz.enc" "$work/aes.key.enc" "$work/public/"
+          sha256sum "$work/public/status.tar.gz.enc" "$work/public/aes.key.enc" > "$work/public/SHA256SUMS"
+
+      - name: Upload encrypted Max recovery status
+        uses: actions/upload-artifact@v4
+        with:
+          name: aiven-max-recovery-encrypted-${{ github.run_id }}
+          path: ${{ runner.temp }}/aiven-max-recovery-${{ github.run_id }}/public/
+          if-no-files-found: error
+          retention-days: 1
